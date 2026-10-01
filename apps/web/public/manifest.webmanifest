@@ -1,6 +1,6 @@
 {
-  "name": "DeepSeek Harness",
-  "short_name": "DSH",
+  "name": "Апельсинка Harness",
+  "short_name": "Апельсинка",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
