@@ -22,6 +22,10 @@ import {
   type IpcMainInvokeEvent,
   type MenuItemConstructorOptions,
 } from 'electron'
+// Apelsinka edition: pin the Harness home to this app's own data directory
+// so the edition always opens its own profile regardless of how it was
+// launched; an explicit DSH_HOME from the environment still wins.
+process.env.DSH_HOME ||= join(app.getPath('userData'), 'harness')
 import { resolveDesktopPaths } from './paths.ts'
 import { DesktopProjectManager } from './project-manager.ts'
 import { DesktopHostFatalError, DesktopHostProcess, DesktopHostUncleanExitError } from './host-process.ts'
