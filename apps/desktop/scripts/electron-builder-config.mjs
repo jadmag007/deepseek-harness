@@ -99,7 +99,12 @@ export function createElectronBuilderConfig(
   const packaged = resolveDesktopBuildCommit(env)
   return {
     appId,
-    protocols: [{ name: 'Апельсинка Harness', schemes: ['dsh'] }],
+    // Latin product name: it names the exe, the install directory, the shortcuts
+    // and the Start Menu entry, and those land in paths that scripts, logs and
+    // process matching have to carry. The brand stays Cyrillic in the UI, where
+    // it belongs (apps/web/public/manifest.webmanifest). userData is unaffected:
+    // it follows extraMetadata.name above, not productName.
+    protocols: [{ name: 'Apelsinka Harness', schemes: ['dsh'] }],
     extraMetadata: {
       // Own data directory and single-instance lock: keeps the edition
       // independent from a coexisting official DeepSeek Harness Desktop.
@@ -109,7 +114,7 @@ export function createElectronBuilderConfig(
       ...buildVersion === productVersion ? {} : { version: buildVersion },
       ...packaged === undefined ? {} : { dshBuildCommit: packaged.commit, dshBuildDirty: packaged.dirty },
     },
-    productName: 'Апельсинка Harness',
+    productName: 'Apelsinka Harness',
     // Unsigned builds carry their own suffix so a shared file can never pass for a release artifact.
     artifactName: `deepseek-harness-\${version}-\${os}-\${arch}${unsigned ? '-unsigned' : ''}.\${ext}`,
     directories: { output: unsigned ? buildPaths.unsignedArtifacts : buildPaths.artifacts },
