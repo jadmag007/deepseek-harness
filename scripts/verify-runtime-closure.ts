@@ -32,6 +32,14 @@ type RuntimePlatformManifest = Record<string, RuntimePlatform>
 
 const AGENT_PRESET_GLOB = 'packages/bundle/web-app/presets/*.patch.yml'
 
+// The Apelsinka edition preset mounts the complex's tool bundles by name
+// (`@local/apelsinka-*`). Those ship as profile bundles through the plugin
+// manager, not as workspace packages, so runtime closure cannot name them.
+// Only that scope is exempt there; the preset's workspace-owned rows stay
+// checked, and every other preset keeps the full rule.
+const PROFILE_BUNDLE_PRESETS = new Set(['apelsinka'])
+const PROFILE_BUNDLE_SCOPE = '@local/'
+
 export interface RuntimeClosureResult {
   failures: string[]
   presetCount: number
@@ -134,6 +142,7 @@ async function missingPresetPlugins(
       for (const target of targets) {
         const processPlatform = processPlatformForTarget(target)
         for (const plugin of activeBarePluginPackages(definition.plugins, processPlatform)) {
+          if (PROFILE_BUNDLE_PRESETS.has(definition.id) && plugin.startsWith(PROFILE_BUNDLE_SCOPE)) continue
           const version = runtimeDependencies[plugin]
           if (version?.startsWith('workspace:') === true) continue
           const preset = definition.id

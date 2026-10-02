@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/client/apelsinka-brand/README.md
+/:
+  en: 489b246d0f5bcd52
+  zh: 59c845079b342d3c
+/deepseek-ai-dsh-client-apelsinka-brand:
+  en: cf54db3c92fc1d09
+  zh: f8095fddff608091
+/deepseek-ai-dsh-client-apelsinka-brand/summary:
+  en: a0879c542f77489a
+  zh: 5a2b565d73dab7cb
+/deepseek-ai-dsh-client-apelsinka-brand/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: d152484eb41ac6b4
+/deepseek-ai-dsh-client-apelsinka-brand/use-this-package:
+  en: c1eeef1d869147ea
+  zh: 37d1eda62d1c1b70
+/deepseek-ai-dsh-client-apelsinka-brand/understand-the-implementation:
+  en: 07eedbeec5aeed6d
+  zh: e0571b414789d9dd
+/deepseek-ai-dsh-client-apelsinka-brand/further-exploration:
+  en: 3b62960cdfe48cef
+  zh: 81312463c36bf053
+/deepseek-ai-dsh-client-apelsinka-brand/model-experience:
+  en: 3120df665299c634
+  zh: 3120df665299c634
+/deepseek-ai-dsh-client-apelsinka-brand/model-experience/kv-cache-effect:
+  en: ca75c51c89c2c9b0
+  zh: ca75c51c89c2c9b0
+/deepseek-ai-dsh-client-apelsinka-brand/known-limitations-and-deferred-work:
+  en: 76e27d8c057c49ba
+  zh: 3ea8cf67209a50ef
+/deepseek-ai-dsh-client-apelsinka-brand/known-limitations-and-deferred-work/dev-note:
+  en: a70a6fcc24cf1509
+  zh: bb5713b6fe62453f

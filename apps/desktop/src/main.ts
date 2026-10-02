@@ -65,6 +65,12 @@ import { DesktopTray } from './tray.ts'
 import { DesktopBackgroundNotice } from './background-notice.ts'
 
 let focusPrimaryWindow = (): void => {}
+/**
+ * Route a later launch. The module-level claim is installed before `main` runs,
+ * so this indirection lets the jump-list commands added during startup take the
+ * launch instead of the plain focus.
+ */
+let routeLaterLaunch = (_argv: readonly string[]): void => { focusPrimaryWindow() }
 let stopForRecovery = async (): Promise<void> => {}
 let shuttingDown = false
 /**
@@ -929,7 +935,8 @@ async function main(): Promise<void> {
   const applicationIconPath = development ? join(app.getAppPath(), 'resources', 'icon-windows.png')
     : join(process.resourcesPath, 'icon.png')
   app.setAboutPanelOptions({
-    applicationName: 'DeepSeek Harness',
+    // Apelsinka edition: the About panel names the product, not the upstream shell.
+    applicationName: 'Apelsinka Harness',
     applicationVersion: app.getVersion(),
     // The release has no separate build number; omit Electron's bundle version.
     version: '',
@@ -978,6 +985,14 @@ async function main(): Promise<void> {
     { role: 'toggleDevTools', visible: false, accelerator: 'F12' },
   ]
   const refreshApplicationMenu = (): void => {
+    // Apelsinka edition on Windows: a template built from hidden items still
+    // makes Electron reserve a menu strip under the custom title bar. Release
+    // builds install no application menu; development keeps the F12 accelerator.
+    if (process.platform === 'win32' && !development) {
+      Menu.setApplicationMenu(null)
+      tray?.relabel()
+      return
+    }
     Menu.setApplicationMenu(Menu.buildFromTemplate(process.platform === 'win32' ? devToolsItems : [{
       label: darwin ? app.name : currentDesktopLocale().messages.application,
       submenu: [...applicationItems(), ...devToolsItems],
@@ -992,6 +1007,43 @@ async function main(): Promise<void> {
       tray = new DesktopTray({ iconPath: trayIconPath, locale: currentDesktopLocale,
         open: () => { focusPrimaryWindow() }, quit: () => { app.quit() } })
     } catch (error) { console.warn('desktop tray: unavailable', error) }
+    // Windows builds a taskbar jump list from `app.name` alone, which yields the
+    // stock «Open DeepSeek Harness». The edition declares its own entries, with
+    // copy from the Desktop dictionary like every other menu row. Electron has no
+    // click handler for a jump-list task, so the commands travel through argv:
+    // a cold start reads its own, a click into the running instance arrives with
+    // `second-instance` below.
+    const jumpListMessages = currentDesktopLocale().messages
+    app.setJumpList([{
+      type: 'custom',
+      name: jumpListMessages.jumpListOpen,
+      items: [
+        { type: 'task', title: jumpListMessages.jumpListOpen },
+        { type: 'separator' },
+        { type: 'task', title: jumpListMessages.jumpListRestart, args: '--apelsinka-restart' },
+        { type: 'separator' },
+        { type: 'task', title: jumpListMessages.jumpListExit, args: '--apelsinka-quit' },
+      ],
+    }])
+    const runJumpListCommand = (argv: readonly string[]): boolean => {
+      if (argv.includes('--apelsinka-restart')) {
+        if (quitting) return true
+        // Without explicit arguments the relaunch would inherit the flag and
+        // restart the application in a loop.
+        app.relaunch({ args: process.argv.slice(1).filter(argument => !argument.startsWith('--apelsinka-')) })
+        quitWithoutConfirmation()
+        return true
+      }
+      if (argv.includes('--apelsinka-quit')) {
+        app.quit()
+        return true
+      }
+      return false
+    }
+    routeLaterLaunch = (argv) => {
+      if (!runJumpListCommand(argv)) focusPrimaryWindow()
+    }
+    runJumpListCommand(process.argv)
   }
   const backgroundNotice = process.platform === 'win32'
     ? new DesktopBackgroundNotice({ markerPath: join(app.getPath('userData'), 'background-close-confirmed'),
@@ -1337,7 +1389,7 @@ async function main(): Promise<void> {
   publishUpdate(updateState)
 }
 
-const ownsDesktopInstance = claimDesktopSingleInstance(app, () => { focusPrimaryWindow() })
+const ownsDesktopInstance = claimDesktopSingleInstance(app, (argv) => { routeLaterLaunch(argv) })
 
 if (ownsDesktopInstance) void app.whenReady().then(main).catch(async (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error)

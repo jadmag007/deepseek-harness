@@ -60,6 +60,7 @@ vi.mock('electron', () => ({
     getAppPath: () => '/development-app',
     getPath: (name: string) => name === 'userData' ? '/desktop-user-data' : `/development-${name}`,
     setAppLogsPath: vi.fn(),
+    setJumpList: vi.fn(),
     getPreferredSystemLanguages: () => ['en-US'],
     on: (name: string, callback: (...args: unknown[]) => void) => { state.appListeners.set(name, callback) },
     quit: state.quit,
@@ -195,7 +196,7 @@ it.each([false, true])('starts welcome onboarding without carrying update focus 
   state.beforeRead.mockReturnValueOnce(reading.promise)
   state.beforeWelcome.mockReturnValueOnce(loading.promise)
   const activate = () => {
-    state.appListeners.get('second-instance')!()
+    state.appListeners.get('second-instance')!({}, ['desktop'])
     state.appListeners.get('open-url')!({ preventDefault: vi.fn() }, 'dsh://open')
   }
   await import('../src/main.ts')

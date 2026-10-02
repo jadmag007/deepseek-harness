@@ -159,6 +159,7 @@ const harness = await vi.hoisted(async () => {
     getVersion: () => '1.0.0',
     getAppPath: (): string => 'desktop-test-app',
     setAppLogsPath: vi.fn(),
+    setJumpList: vi.fn(),
     getPath: vi.fn<(name: string) => string>(),
     setAboutPanelOptions: vi.fn<(options: Electron.AboutPanelOptionsOptions) => void>(),
     requestSingleInstanceLock: () => true,
@@ -704,10 +705,10 @@ describe('desktop main startup', () => {
     } else if (platform === 'win32') {
       expect(window.options).toMatchObject({ titleBarStyle: 'hidden', titleBarOverlay: { height: WINDOWS_TITLEBAR_HEIGHT } })
       expect(window.options).not.toHaveProperty('vibrancy')
-      expect(harness.menu.mock.calls[0]![0]).toEqual([
-        { role: 'toggleDevTools', visible: false },
-        { role: 'toggleDevTools', visible: false, accelerator: 'F12' },
-      ])
+      // Apelsinka edition: a release build installs no application menu, because a
+      // template of hidden items still makes Electron reserve a menu strip under
+      // the custom title bar. Development keeps the hidden F12 accelerator.
+      expect(harness.menu.setApplicationMenu).toHaveBeenCalledWith(null)
     } else {
       expect(window.options).not.toHaveProperty('titleBarStyle')
       expect(window.options).not.toHaveProperty('vibrancy')
@@ -1075,7 +1076,7 @@ describe('desktop main startup', () => {
       expect(window.show.mock.invocationCallOrder[0]).toBeLessThan(window.moveTop.mock.invocationCallOrder[0]!)
     }
     window.destroy()
-    harness.app.emit('second-instance')
+    harness.app.emit('second-instance', {}, ['desktop'])
     const replacement = harness.windows[1]!
     await replacement.shown.promise
     expect(replacement.show).toHaveBeenCalledOnce()
@@ -1116,7 +1117,7 @@ describe('desktop main startup', () => {
     expect(harness.dialog.showMessageBox).not.toHaveBeenCalled()
     expect(window.hide).toHaveBeenCalledOnce()
     await host.stopping.promise
-    harness.app.emit('second-instance')
+    harness.app.emit('second-instance', {}, ['desktop'])
     expect(window.show).not.toHaveBeenCalled()
     expect(window.focus).not.toHaveBeenCalled()
     host.exited.resolve()
@@ -1140,7 +1141,7 @@ describe('desktop main startup', () => {
     harness.trays[0]!.emit('click')
     expect(window.show).toHaveBeenCalledOnce()
     expect(window.focus).toHaveBeenCalled()
-    harness.app.emit('second-instance')
+    harness.app.emit('second-instance', {}, ['desktop'])
     expect(window.show).toHaveBeenCalledTimes(2)
     // Locale changes relabel the tray together with the application menu.
     const relabels = harness.trays[0]!.setContextMenu.mock.calls.length

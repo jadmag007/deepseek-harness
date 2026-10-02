@@ -64,6 +64,9 @@ export const en = {
   startupReinstallAdvice: 'If application files are missing or damaged, close the application and reinstall it. Your tasks are stored separately.',
   exitApplication: 'Exit',
   restartApplication: 'Restart',
+  jumpListOpen: 'Open Apelsinka',
+  jumpListRestart: 'Restart Apelsinka',
+  jumpListExit: 'Exit',
   recoveryOperationFailed: 'The recovery operation failed',
   disableThirdPartyPlugins: 'Disable third-party plugins, back up profile patch, and restart',
   welcomeTitle: 'DeepSeek Harness',
@@ -171,6 +174,65 @@ export const en = {
 /** Every Desktop locale supplies the complete English key set. */
 export type DesktopMessages = { readonly [Key in keyof typeof en]: string }
 
+/**
+ * Russian dictionary of the Apelsinka edition. It starts from the English key
+ * set and replaces the copy the owner meets in this edition — the window caption
+ * menu, the tray, the taskbar jump list, the brand and about text — so an
+ * untranslated string keeps readable English instead of disappearing.
+ */
+export const ru: DesktopMessages = {
+  ...en,
+  application: 'Приложение',
+  fileMenu: 'Файл',
+  closePage: 'Закрыть страницу или окно',
+  aboutMenu: 'О программе «Апельсинка Harness»',
+  aboutProduct: 'Апельсинка Harness',
+  aboutVersion: 'Версия V{version}',
+  hideApplication: 'Скрыть «Апельсинку»',
+  hideOtherApplications: 'Скрыть остальные',
+  showAllApplications: 'Показать все',
+  quitApplication: 'Завершить «Апельсинку»',
+  openApplication: 'Открыть «Апельсинку»',
+  quit: 'Выход',
+  cancel: 'Отмена',
+  quitTitle: 'Завершить «Апельсинку»?',
+  quitActiveTasks: 'Выполняющиеся задачи будут прерваны.',
+  quitScheduledTasks: 'Запланированные задачи не запустятся, пока приложение закрыто.',
+  quitActiveAndScheduledTasks: 'Выполняющиеся задачи будут прерваны, и запланированные не запустятся, пока приложение закрыто.',
+  backgroundNoticeBody: 'Задачи продолжат выполняться. Окно можно открыть снова из трея.',
+  backgroundNoticeConfirm: 'Подтвердить',
+  edit: 'Правка',
+  menuBar: 'Меню приложения',
+  delete: 'Удалить',
+  undo: 'Отменить',
+  redo: 'Повторить',
+  cut: 'Вырезать',
+  copy: 'Копировать',
+  paste: 'Вставить',
+  selectAll: 'Выделить всё',
+  exitApplication: 'Выход',
+  restartApplication: 'Перезапуск',
+  jumpListOpen: 'Открыть «Апельсинку»',
+  jumpListRestart: 'Перезапустить «Апельсинку»',
+  jumpListExit: 'Выход',
+  checkUpdatesMenu: 'Проверить обновления…',
+  reloadPageMenu: 'Перезагрузить страницу',
+  restartAppHostMenu: 'Перезапустить приложение и Host',
+  welcomeTitle: 'Апельсинка Harness',
+  welcomeBrand: 'Апельсинка Harness',
+  welcomeTaglineBefore: 'Добро пожаловать в ',
+  welcomeTaglineBrand: 'Апельсинку Harness',
+  welcomeTaglineAfter: '',
+  welcomeDescription: 'Строй возможное. Исследуй разумное.',
+  unknownError: 'Неизвестная ошибка',
+  updateCheckTitle: 'Проверка обновлений',
+  updateCurrent: 'Установленная версия — самая свежая!',
+  updateChecking: 'Проверяем обновления…',
+  updateDownload: 'Скачать обновление',
+  updateClose: 'Закрыть',
+  updateAcknowledge: 'Понятно',
+}
+
 export const zh = {
   cliCommandMenu: '管理 dsh 命令…',
   cliCommandTitle: '管理 dsh 命令',
@@ -235,6 +297,9 @@ export const zh = {
   startupReinstallAdvice: '如果应用文件缺失或损坏，请关闭应用并重新安装。任务数据存储在独立位置。',
   exitApplication: '退出',
   restartApplication: '重启',
+  jumpListOpen: '打开 Apelsinka',
+  jumpListRestart: '重启 Apelsinka',
+  jumpListExit: '退出',
   recoveryOperationFailed: '恢复操作失败',
   disableThirdPartyPlugins: '禁用第三方插件、备份 profile patch 并重启',
   welcomeTitle: 'DeepSeek Harness',
@@ -341,15 +406,18 @@ export const zh = {
 
 /** Locale payload exposed to the Desktop-owned renderer. */
 export interface DesktopLocale {
-  readonly id: 'en' | 'zh-CN'
+  readonly id: 'en' | 'ru' | 'zh-CN'
   readonly messages: DesktopMessages
 }
 
 /** Resolve Electron's locale to one shipped Desktop dictionary. */
 export function resolveDesktopLocale(locale: string): DesktopLocale {
-  return locale.toLowerCase().startsWith('zh')
-    ? { id: 'zh-CN', messages: zh }
-    : { id: 'en', messages: en }
+  const language = locale.toLowerCase()
+  if (language.startsWith('zh')) return { id: 'zh-CN', messages: zh }
+  // Apelsinka edition: the owner's Windows is Russian, and the edition's own
+  // chrome reads better in it than in the English fallback.
+  if (language.startsWith('ru')) return { id: 'ru', messages: ru }
+  return { id: 'en', messages: en }
 }
 
 /**
@@ -360,10 +428,10 @@ export function resolveDesktopLocale(locale: string): DesktopLocale {
  */
 export function resolveDesktopStartupLocale(preference: string | null, languages: readonly string[]): DesktopLocale {
   const selected = preference?.toLowerCase()
-  if (selected === 'zh' || selected === 'en') return resolveDesktopLocale(selected)
+  if (selected === 'zh' || selected === 'ru' || selected === 'en') return resolveDesktopLocale(selected)
   for (const language of languages) {
     const primary = language.toLowerCase().split('-')[0]
-    if (primary === 'zh' || primary === 'en') return resolveDesktopLocale(primary)
+    if (primary === 'zh' || primary === 'ru' || primary === 'en') return resolveDesktopLocale(primary)
   }
   return resolveDesktopLocale('en')
 }

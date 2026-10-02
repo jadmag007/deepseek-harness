@@ -1,0 +1,82 @@
+/* Apelsinka brand layer: the sidebar mark and wordmark, and the appearance tab.
+   Colors come from the design-platform aliases; the orange itself arrives
+   through the variant palette applied in palette.ts. */
+
+.mark {
+  display: block;
+  filter: drop-shadow(0 0 6px var(--dsw-brand-glow, rgba(255, 140, 26, 0.3)));
+}
+
+.name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  white-space: nowrap;
+  line-height: 24px;
+}
+
+.name b {
+  color: var(--dsw-static-deepseek-450);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.name span {
+  color: var(--dsw-brand-secondary, var(--dsw-alias-label-secondary));
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 8px;
+}
+
+.heading {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip,
+.chipSelected {
+  padding: 6px 14px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 999px;
+  corner-shape: round;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.chipSelected {
+  border-color: var(--dsw-alias-state-business-primary);
+  background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 16%, transparent);
+  color: var(--dsw-alias-label-primary);
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+}

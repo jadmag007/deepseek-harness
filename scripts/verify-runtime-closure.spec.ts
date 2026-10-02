@@ -124,6 +124,30 @@ describe('verifyRuntimeClosure', () => {
     ])
   })
 
+  it('exempts profile-bundle scope in the profile-bundle preset only', async () => {
+    const root = fixture({
+      'python/sdk-runtime/package.json': { name: 'runtime', dependencies: {} },
+      'python/sdk-runtime/platforms.json': platforms,
+      'preset:apelsinka': `
+- id: board
+  name: '@local/apelsinka-board'
+- id: plugin
+  name: '@scope/plugin'
+`,
+      'preset:standard': `
+- id: board
+  name: '@local/apelsinka-board'
+`,
+    })
+
+    const result = await verifyRuntimeClosure(root)
+
+    expect(result.failures).toEqual([
+      'apelsinka preset -> @scope/plugin (linux-arm64, linux-x64, macos-arm64, macos-x64, win-x64)',
+      'standard preset -> @local/apelsinka-board (linux-arm64, linux-x64, macos-arm64, macos-x64, win-x64)',
+    ])
+  })
+
   it('fails when no shipped preset is discovered', async () => {
     const root = fixture({
       'python/sdk-runtime/package.json': { name: 'runtime', dependencies: {} },

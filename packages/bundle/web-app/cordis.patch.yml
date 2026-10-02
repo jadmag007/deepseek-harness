@@ -134,8 +134,13 @@
 
     # Configuration-surface reads and writes over Typert Remote. Each method
     # reports an actionable error when its settings-domain provider is absent.
+    # Apelsinka edition: the DeepSeek account row is switched off in the build.
+    # The edition talks to models through OpenRouter, so the sign-in button
+    # would only ever offer an account the owner does not use; the stock
+    # settings trigger stays in its place.
     - id: ui-settings-account
       name: '@deepseek-ai/dsh-client-ui-settings-account'
+      disabled: true
 
     - id: account-controller
       name: '@deepseek-ai/dsh-api-account-controller'
@@ -317,6 +322,12 @@
     # Official occupants for the generic sidebar and conversation brand slots.
     - id: ui-brand-official
       name: '@deepseek-ai/dsh-client-ui-brand-official'
+
+    # Apelsinka edition brand layer: the orange-slice mark and wordmark over the
+    # same slots (at priority -1, so it renders in place of the official
+    # occupant), the appearance tab, and the palette stylesheet.
+    - id: apelsinka-brand
+      name: '@deepseek-ai/dsh-client-apelsinka-brand'
 
     - id: ui-attachment
       name: '@deepseek-ai/dsh-client-ui-attachment'
@@ -562,4 +573,6 @@
     - id: agent-preset-registry
       name: '@deepseek-ai/dsh-agent-preset-registry'
       config:
-        default: standard
+        # The edition's own preset: a new session in the Apelsinka build starts
+        # as the keeper of the complex, not as the stock standard agent.
+        default: apelsinka
