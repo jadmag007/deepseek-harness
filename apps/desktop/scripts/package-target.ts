@@ -20,6 +20,7 @@ import { packagingErrorDetails, packagingStep } from './packaging-step.mjs'
 import { notarizeMacOS } from './notarize-macos.mjs'
 import { resolveMacOSNotarizationEnvironment } from './desktop-release-environment.mjs'
 import { DESKTOP_BUILD_VERSION_ENV, resolveDesktopBuildVersion, validateDesktopBuildVersion } from './desktop-build-version.mjs'
+import { resolvePublishedBuildVersion } from './desktop-edition-version.mjs'
 import { suggestDesktopBuildVersion } from './desktop-build-version-discovery.ts'
 import { desktopBuildCommitEnvironment, readDesktopBuildCommit, resolveDesktopBuildCommit } from './desktop-build-commit.mjs'
 import { requireDesktopToolchain } from './desktop-toolchain-preflight.ts'
@@ -143,7 +144,9 @@ function writeReleaseRecord(
   if (desktopVersion !== dshVersion) {
     throw new Error(`desktop package: desktop version ${desktopVersion} does not match dsh version ${dshVersion}`)
   }
-  const buildVersion = resolveDesktopBuildVersion(environment, dshVersion)
+  // The same resolution the electron-builder config uses, so the record, the
+  // artifact names and the installed app.getVersion() cannot drift apart.
+  const { version: buildVersion, edition } = resolvePublishedBuildVersion(environment, dshVersion, APP_ROOT, new Date())
   const packaged = resolveDesktopBuildCommit(environment)
   const update = resolveDesktopAutoUpdateConfig(environment, target.platform, target.arch)
   const recordPath = join(artifactsRoot, desktopBuildRecordFilename(target.name))
@@ -152,6 +155,8 @@ function writeReleaseRecord(
     schemaVersion: 1,
     target: target.name,
     version: buildVersion,
+    // Absent when the edition has no EDITION_VERSION, so a stock build keeps the upstream record shape.
+    ...edition === null ? {} : { edition },
     environment: update.environment,
     publicUrl: update.publicUrl,
     // Upload reads this to tag the commit a production release was packaged from.
@@ -311,15 +316,15 @@ function runPnpm(
  * @param invocation - Validated packaging request.
  * @param productVersion - Version the manifests declare.
  * @param environment - Release settings, which name the bucket automatic numbering reads.
- * @returns The product version, the requested version, or the next free index for today.
+ * @returns The requested version, or undefined when the run requested none.
  */
 async function resolveRequestedBuildVersion(
   invocation: DesktopPackageInvocation,
   productVersion: string,
   environment: NodeJS.ProcessEnv,
-): Promise<string> {
+): Promise<string | undefined> {
   const requested = invocation.requestedBuildVersion
-  if (requested === undefined) return productVersion
+  if (requested === undefined) return undefined
   if (requested !== AUTOMATIC_BUILD_VERSION) return validateDesktopBuildVersion(requested, productVersion)
   const paths = desktopTargetBuildPaths(invocation.target.name)
   return suggestDesktopBuildVersion({
@@ -336,7 +341,18 @@ async function main(): Promise<void> {
   const productVersion = packageVersion(join(APP_ROOT, 'package.json'), 'desktop package')
   // Release settings come from the target dotenv file alone, so the version this run publishes is an
   // argument; the environment variable below only carries it to the child processes that build.
-  const buildVersion = await resolveRequestedBuildVersion(invocation, productVersion, environment)
+  // Resolved once here: a requested version wins, and without one the edition numbering takes over.
+  // Passing the resolved value on keeps the artifact names, the build record and the packaged
+  // manifest in agreement even though each of them reads it separately.
+  const requestedBuildVersion = await resolveRequestedBuildVersion(invocation, productVersion, environment)
+  const { version: buildVersion } = resolvePublishedBuildVersion(
+    requestedBuildVersion === undefined
+      ? environment
+      : { ...environment, [DESKTOP_BUILD_VERSION_ENV]: requestedBuildVersion },
+    productVersion,
+    APP_ROOT,
+    new Date(),
+  )
   environment[DESKTOP_BUILD_VERSION_ENV] = buildVersion
   if (invocation.check) {
     validateDesktopPackageEnvironment(environment, target, invocation)
