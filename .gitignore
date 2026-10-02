@@ -46,3 +46,7 @@ worktrees/
 .agents/worktrees/
 .typert-*/
 native/system/test/bin/
+
+# Вендоренный сторонний плагин dsh-russian-lang: его `lib/` — это исходники
+# опубликованного пакета, а не сборка, поэтому правило выше его не должно прятать.
+!third-party/dsh-russian-lang/lib/
