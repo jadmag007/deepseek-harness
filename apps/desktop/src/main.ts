@@ -1013,18 +1013,37 @@ async function main(): Promise<void> {
     // click handler for a jump-list task, so the commands travel through argv:
     // a cold start reads its own, a click into the running instance arrives with
     // `second-instance` below.
+    //
+    // The whole declaration is guarded: the jump list is a convenience, and a
+    // shape this Electron refuses must not keep the application from starting.
+    // Only the documented, minimal shape is used — one custom category whose items
+    // are tasks naming their own `program`; separators and an implicit program are
+    // what the native converter rejected with «Argument must be null or an array of
+    // categories», which aborted startup before this guard existed.
     const jumpListMessages = currentDesktopLocale().messages
-    app.setJumpList([{
-      type: 'custom',
-      name: jumpListMessages.jumpListOpen,
-      items: [
-        { type: 'task', title: jumpListMessages.jumpListOpen },
-        { type: 'separator' },
-        { type: 'task', title: jumpListMessages.jumpListRestart, args: '--apelsinka-restart' },
-        { type: 'separator' },
-        { type: 'task', title: jumpListMessages.jumpListExit, args: '--apelsinka-quit' },
-      ],
-    }])
+    try {
+      app.setJumpList([{
+        type: 'custom',
+        name: jumpListMessages.jumpListOpen,
+        items: [
+          { type: 'task', title: jumpListMessages.jumpListOpen, program: process.execPath },
+          {
+            type: 'task',
+            title: jumpListMessages.jumpListRestart,
+            program: process.execPath,
+            args: '--apelsinka-restart',
+          },
+          {
+            type: 'task',
+            title: jumpListMessages.jumpListExit,
+            program: process.execPath,
+            args: '--apelsinka-quit',
+          },
+        ],
+      }])
+    } catch (error) {
+      console.warn('desktop jump list: unavailable, keeping the stock one', error)
+    }
     const runJumpListCommand = (argv: readonly string[]): boolean => {
       if (argv.includes('--apelsinka-restart')) {
         if (quitting) return true
