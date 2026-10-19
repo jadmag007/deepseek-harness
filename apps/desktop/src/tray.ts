@@ -3,13 +3,15 @@
 import { Menu, nativeImage, Tray } from 'electron'
 import type { DesktopLocale } from './locale.ts'
 
-/** Main-process actions the tray triggers; both run the same paths as the window and application menu. */
+/** Main-process actions the tray triggers; each runs the same paths as the window and application menu. */
 export interface DesktopTrayOptions {
   /** Multi-size ICO rendered by `scripts/render-tray-icon.ts`; Windows picks the bitmap for the display scale. */
   readonly iconPath: string
   readonly locale: () => DesktopLocale
   /** Show and focus the primary window. */
   readonly open: () => void
+  /** Relaunch the application through the same path as the Jump List restart task. */
+  readonly restart: () => void
   /** Request quit through the same confirmation as every other quit entry. */
   readonly quit: () => void
 }
@@ -18,7 +20,7 @@ export interface DesktopTrayOptions {
 export class DesktopTray {
   private tray: Tray | undefined
 
-  /** @param options - Icon path, locale reader, and the open and quit actions. */
+  /** @param options - Icon path, locale reader, and the open, restart, and quit actions. */
   constructor(private readonly options: DesktopTrayOptions) {
     const tray = new Tray(nativeImage.createFromPath(options.iconPath))
     this.tray = tray
@@ -34,6 +36,7 @@ export class DesktopTray {
     tray.setToolTip(messages.aboutProduct)
     tray.setContextMenu(Menu.buildFromTemplate([
       { label: messages.openApplication, click: () => { this.options.open() } },
+      { label: messages.trayRestart, click: () => { this.options.restart() } },
       { type: 'separator' },
       { label: messages.quitApplication, click: () => { this.options.quit() } },
     ]))

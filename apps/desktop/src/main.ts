@@ -100,6 +100,13 @@ function quitWithoutConfirmation(): void {
   skipQuitConfirmation = true
   app.quit()
 }
+/** Restart without the task confirmation through the Jump List restart task's relaunch path. */
+function restartWithoutConfirmation(): void {
+  // Without explicit arguments the relaunch would inherit the flag and
+  // restart the application in a loop.
+  app.relaunch({ args: process.argv.slice(1).filter(argument => !argument.startsWith('--apelsinka-')) })
+  quitWithoutConfirmation()
+}
 const recovery = new DesktopFatalRecovery({
   messages: () => currentDesktopLocale().messages,
   show: options => dialog.showMessageBox(options),
@@ -1005,7 +1012,7 @@ async function main(): Promise<void> {
     // The tray is the way back to a hidden window; without it, relaunching the application still focuses it.
     try {
       tray = new DesktopTray({ iconPath: trayIconPath, locale: currentDesktopLocale,
-        open: () => { focusPrimaryWindow() }, quit: () => { app.quit() } })
+        open: () => { focusPrimaryWindow() }, restart: restartWithoutConfirmation, quit: () => { app.quit() } })
     } catch (error) { console.warn('desktop tray: unavailable', error) }
     // Windows builds a taskbar jump list from `app.name` alone, which yields the
     // stock «Open DeepSeek Harness». The edition declares its own entries, with
@@ -1047,10 +1054,7 @@ async function main(): Promise<void> {
     const runJumpListCommand = (argv: readonly string[]): boolean => {
       if (argv.includes('--apelsinka-restart')) {
         if (quitting) return true
-        // Without explicit arguments the relaunch would inherit the flag and
-        // restart the application in a loop.
-        app.relaunch({ args: process.argv.slice(1).filter(argument => !argument.startsWith('--apelsinka-')) })
-        quitWithoutConfirmation()
+        restartWithoutConfirmation()
         return true
       }
       if (argv.includes('--apelsinka-quit')) {
